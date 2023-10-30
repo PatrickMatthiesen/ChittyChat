@@ -21,5 +21,5 @@ go run .\server\
 Client:
 
 ```sh
-go run .\client\ -name alice
+go run .\client\ -name Alice
 ```

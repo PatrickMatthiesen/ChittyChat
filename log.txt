@@ -1,8 +1,19 @@
-2022/11/14 23:32:05 alice is joining the chat
-2022/11/14 23:32:05 Server: Join request from alice
-2022/11/14 23:32:05 alice got message from Server: Welcome alice to the Chitty Chat!
-2022/11/14 23:32:12 alice got message from alice: h
-2022/11/14 23:32:16 bob is joining the chat
-2022/11/14 23:32:16 Server: Join request from bob
-2022/11/14 23:32:16 alice got message from Server: Welcome bob to the Chitty Chat!
-2022/11/14 23:32:16 bob got message from Server: Welcome bob to the Chitty Chat!
+2023/10/30 16:52:27 Alice : Tries to join chat
+2023/10/30 16:52:27 Server: Join request from Alice
+2023/10/30 16:52:27 Alice | Time 1 | From Server: Welcome Alice to the Chitty Chat!
+2023/10/30 16:52:30 Bob : Tries to join chat
+2023/10/30 16:52:30 Server: Join request from Bob
+2023/10/30 16:52:30 Alice | Time 2 | From Server: Welcome Bob to the Chitty Chat!
+2023/10/30 16:52:30 Bob | Time 1 | From Server: Welcome Bob to the Chitty Chat!
+2023/10/30 16:52:50 Bob | Time 2 | Attempts to publish: Hi
+2023/10/30 16:52:50 Bob | Time 3 | From Bob: Hi
+2023/10/30 16:52:50 Alice | Time 3 | From Bob: Hi
+2023/10/30 16:53:00 Alice | Time 4 | Attempts to publish: What are you doing today?
+2023/10/30 16:53:00 Alice | Time 5 | From Alice: What are you doing today?
+2023/10/30 16:53:00 Bob | Time 5 | From Alice: What are you doing today?
+2023/10/30 16:53:11 Bob | Time 6 | Attempts to publish: Nothing
+2023/10/30 16:53:11 Alice | Time 7 | From Bob: Nothing
+2023/10/30 16:53:11 Bob | Time 7 | From Bob: Nothing
+2023/10/30 16:53:11 Bob disconnected
+2023/10/30 16:53:11 Alice | Time 8 | From Server: Bob has left the chat
+2023/10/30 16:53:14 Alice disconnected

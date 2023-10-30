@@ -66,6 +66,7 @@ func launchServer() {
 
 	gRPC.RegisterChittyChatServer(grpcServer, server) //Registers the server to the gRPC server.
 
+	// in case you are trying to connect to the server from another computer
 	fmt.Println("Clients should dial: ", GetOutboundIP())
 
 	if err := grpcServer.Serve(list); err != nil {

@@ -22,13 +22,10 @@ var serverPort = flag.String("server", "5400", "Tcp server")
 var lamportTime = flag.Int64("lamport", 0, "Lamport time")
 
 var server gRPC.ChittyChatClient //the server
-var ServerConn *grpc.ClientConn  //the server connection
 
 func main() {
 	//parse flag/arguments
 	flag.Parse()
-
-	fmt.Println("--- Welcome to Chitty Chat ---")
 
 	//log to file instead of console
 	f := setLog()
@@ -36,14 +33,13 @@ func main() {
 
 	//connect to server and close the connection when program closes
 	connectToServer()
-	defer ServerConn.Close()
 	go joinChat()
 
 	// start allowing user input
-	parseAndSendInput()
+	parseInputAndPublish()
 }
 
-// connect to server
+// connect to server (you should know this by now)
 func connectToServer() {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithBlock(), grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -51,38 +47,25 @@ func connectToServer() {
 	fmt.Printf("client %s: Attempts to dial on port %s\n", *clientsName, *serverPort)
 	conn, err := grpc.Dial(fmt.Sprintf(":%s", *serverPort), opts...)
 	if err != nil {
-		fmt.Printf("Fail to Dial : %v", err)
+		fmt.Printf("Failed to Dial : %v", err)
 		return
 	}
 
 	server = gRPC.NewChittyChatClient(conn)
-	ServerConn = conn
-	// fmt.Println("the connection is: ", conn.GetState().String())
 }
 
 func joinChat() {
-	joinRequest := &gRPC.JoinRequest{
+	log.Println(*clientsName, ": Tries to join chat")
+	stream, _ := server.Join(context.Background(), &gRPC.JoinRequest{
 		Name:        *clientsName,
 		LamportTime: 0,
-	}
-	log.Println(*clientsName, "is joining the chat")
-	stream, _ := server.Join(context.Background(), joinRequest)
+	})
 
 	for {
-		select {
-		case <-stream.Context().Done():
-			fmt.Println("Connection to server closed")
-			return // stream is done
-		default:
-		}
-
 		incomeing, err := stream.Recv()
-		if err == io.EOF {
-			fmt.Println("Server is done sending messages")
-			return
-		}
 		if err != nil {
-			log.Fatalf("Failed to receive message from channel. \nErr: %v", err)
+			fmt.Printf("\rThe server has shut down, hope to see you again another time!\n")
+			log.Fatalf("%s: Failed to receive message from stream. \n\t%v", *clientsName, err)
 		}
 
 		if incomeing.LamportTime > *lamportTime {
@@ -91,31 +74,39 @@ func joinChat() {
 			*lamportTime++
 		}
 
-		log.Printf("%s got message from %s: %s", *clientsName, incomeing.Sender, incomeing.Message)
+		log.Printf("%s | Time %d | From %s: %s", *clientsName, *lamportTime, incomeing.Sender, incomeing.Message)
 		fmt.Printf("\rLamport: %v | %v: %v \n", *lamportTime, incomeing.Sender, incomeing.Message)
 		fmt.Print("-> ")
 	}
 }
 
-func parseAndSendInput() {
+func parseInputAndPublish() {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Type the amount you wish to increment with here. Type 0 to get the current value")
+	fmt.Println("--------------------")
+	fmt.Println("Type a message you want to share with the chat.")
 	fmt.Println("--------------------")
 
-	//Infinite loop to listen for clients input.
+	//Infinite loop to listen for client input.
 	fmt.Print("-> ")
 	for {
 		//Read user input to the next newline
 		input, err := reader.ReadString('\n')
-		if err != nil {
-			log.Fatal(err)
+		if err != nil && err != io.EOF {
+			log.Fatalf("%s had error: %v", *clientsName, err)
 		}
-		input = strings.TrimSpace(input) //Trim whitespace
+		if err == io.EOF {
+			fmt.Println("\rBye bye. Hope to see you again soon!")
+			return
+		}
+
+		//Trim whitespace from input
+		input = strings.TrimSpace(input)
 
 		// we are sending a message so we increment the lamport time
 		*lamportTime++
 
 		// publish the message in the chat
+		log.Printf("%s | Time %d | Attempts to publish: %s", *clientsName, *lamportTime, input)
 		response, err := server.Publish(context.Background(), &gRPC.Message{
 			Sender:      *clientsName,
 			Message:     input,
@@ -123,7 +114,7 @@ func parseAndSendInput() {
 		})
 
 		if err != nil || response == nil {
-			log.Printf("Client %s: something went wrong with the server :(", *clientsName)
+			log.Printf("Client %s: something went wrong trying to publish the message :(", *clientsName)
 			continue
 		}
 	}
